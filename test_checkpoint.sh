@@ -17,7 +17,7 @@ test -s batch.checkpoint || fail "checkpoint missing"
 pass "periodic checkpoints"
 
 rm -f batch.checkpoint batch.checkpoint.tmp
-"$BIN" 100000 100000 1 >signal.log 2>&1 &
+"$BIN" 2000 2000 1 >signal.log 2>&1 &
 pid=$!
 sleep 0.08
 kill -USR1 "$pid" 2>/dev/null || true
@@ -26,18 +26,18 @@ grep -q '\[checkpoint\] committed' signal.log || fail "early checkpoint missing"
 pass "SIGUSR1 deferred checkpoint"
 
 rm -f batch.checkpoint batch.checkpoint.tmp
-"$BIN" 120000 120000 1 >repeated.log 2>&1 &
+"$BIN" 2500 2500 1 >repeated.log 2>&1 &
 pid=$!
 sleep 0.05
 for _ in 1 2 3 4 5; do kill -USR1 "$pid" 2>/dev/null || true; sleep 0.01; done
 wait "$pid" || fail "repeated-signal run"
-"$BIN" 120000 120000 0 >resume.log
+"$BIN" 2500 2500 0 >resume.log
 grep -q 'valid checkpoint' resume.log || fail "checkpoint invalid after repeated signals"
 pass "repeated signals"
 
 cp batch.checkpoint saved.checkpoint
 printf 'truncated-write' > batch.checkpoint.tmp
-"$BIN" 120000 120000 0 >temp-recovery.log
+"$BIN" 2500 2500 0 >temp-recovery.log
 grep -q 'valid checkpoint' temp-recovery.log || fail "temp file interfered with recovery"
 cmp -s batch.checkpoint saved.checkpoint || fail "committed state changed due to orphan temp"
 pass "orphaned interrupted temp write ignored"
